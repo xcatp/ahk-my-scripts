@@ -6,6 +6,8 @@
 #Include G:\AHK\git-ahk-lib\Tip.ahk
 #Include G:\AHK\git-ahk-lib\util\Animation.ahk
 
+#NoTrayIcon
+
 TransparencyGUI.Show()
 
 class TransparencyGUI extends Gui {

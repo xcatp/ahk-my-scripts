@@ -43,12 +43,12 @@ class AhkProcessView extends Gui {
         remark := 'this'
       } else remark := ''
       parts := ParseCmdLine(process.CommandLine)
-      opt := (IsSet(hlSet) && hlSet.Has(parts.scriptPath)) ? 'Select' : ''
+      opt := (IsSet(hlSet) && hlSet.Has(parts.filespec)) ? 'Select' : ''
       lv.Add(opt
         , process.ProcessId
-        , parts.scriptPath
+        , parts.filespec
         , AutoByteFormat(process.WorkingSetSize)
-        , parts.args
+        , parts.params
         , parts.switchs.join(' ')
         , remark
       )

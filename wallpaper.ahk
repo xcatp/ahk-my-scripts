@@ -12,53 +12,40 @@ TraySetIcon '.\resource\icon\Meow.png'
 ; --no-skins2-systray 关闭托盘
 ; --no-audio
 
+/**
+ * 使用 VLC 作为播放器，通过传递命令行参数控制vlc显示及播放列表
+ */
+
 Persistent
 
-videoList := [
-  'D:\video\020.mp4',
-  'D:\video\030.mp4',
-  'D:\video\032.mp4'
-]
+options := ['--video-wallpaper', '--no-video-title-show', '--no-loop', '-R'], videoList := []
+if IsEmpty(A_Args)
+  ExitApp()
 for v in A_Args
-  FileExist(v) && videoList.Push(v)
+  videoList.Push(v)
+_log .= '-参数: `n>' videoList.join('`n>'), Tip.ShowTip(_log)
 
-options := ['--video-wallpaper', '--no-video-title-show', '--no-loop', '-R']
-cmdRunVLC := JoinStr(A_Space, 'F:\VLC\vlc.exe', options.join(A_Space), videoList.join(A_Space))
-_log .= '`n-使用视频列表: `n>' videoList.join('`n>'), Tip.ShowTip(_log)
+RunWait(JoinStr(A_Space, A_ComSpec, '/c start F:\VLC\vlc.exe', options.join(A_Space), videoList.join(A_Space)), , 'min')
+SendMsgToProgman()
 
-RunWait(A_ComSpec ' /c start ' cmdRunVLC, , 'min')
-
-_log .= '`n-等待vlc窗口', Tip.ShowTip(_log)
-WinWaitActive('ahk_exe' 'vlc.exe', , 10)
-if !WinExist('ahk_exe' 'vlc.exe') {
-  _log .= '`n-无法启动vlc', Tip.ShowTip(_log)
+_log .= '`n-等待vlc窗口(5s)', Tip.ShowTip(_log)
+WinWaitActive('ahk_exe' 'vlc.exe', , 5)
+if !WinExist('ahk_exe' 'vlc.exe')
   throw Error('无法启动vlc')
-}
 vlcId := WinGetID('ahk_exe' 'vlc.exe'), progmanId := WinGetID('ahk_class Progman')
-
-if DllCall("FindWindowEx"
-  , "UInt", progmanId
-  , "UInt", 0, "Str", "SHELLDLL_DefView"
-  , "UInt", 0
-) {
-  _log .= '`n-需要向Progman发送消息', Tip.ShowTip(_log)
-  SendMsgToProgman(), Sleep(200)
-}
 beforeParent := DllCall('SetParent', 'ptr', vlcId, 'ptr', progmanId)
 
 DetectHiddenWindows true
-workerWIds := WinGetList('ahk_class WorkerW')
-WinHide('ahk_id' workerWIds.at(-1))
+workerWId := WinGetList('ahk_class WorkerW').at(-1)
+WinHide('ahk_id' workerWId)
 
-_log .= '`n-完成', Tip.ShowTip(_log)
+_log .= '`n-完成', Tip.ShowTip(_log), TransparentTaskBar(2)
 
-TransparentTaskBar(2)
-
-switchItems := ['拉回VLC', '压入VLC', '隐藏VLC', '显示VLC']
+switchItems := ['隐藏', '显示']
 m := A_TrayMenu
   , m.Delete()
-  , m.Add(switchItems[3], M_Toggle1)
-  , m.Add(switchItems[1], M_Toggle2)
+  , m.Add(switchItems[1], Toggle)
+  , m.Add('重置', (*) => (DllCall('SetParent', 'ptr', vlcId, 'ptr', WinGetID('ahk_class Progman')), WinHide('ahk_id' workerWId)))
   , m.Add()
   , m.Add('透明', (*) => TransparentTaskBar(2))
   , m.Add('模糊', (*) => TransparentTaskBar(3))
@@ -67,35 +54,16 @@ m := A_TrayMenu
   , m.Add('退出', (*) => ExitApp())
 m.ClickCount := 1, m.Default := '透明'
 
-M_Toggle1(*) {
-  global vlcId, m
+Toggle(*) {
   static flag := false
   if !WinExist('ahk_id' vlcId)
     return Tip.ShowTip('vlc已被关闭')
-  if flag := !flag {
-    m.Rename(switchItems[3], switchItems[4])
-    WinHide('ahk_id' vlcId), Tip.ShowTip(switchItems[3])
-  } else {
-    m.Rename(switchItems[4], switchItems[3])
-    WinShow('ahk_id' vlcId), Tip.ShowTip(switchItems[4])
-  }
+  if flag := !flag
+    m.Rename(switchItems[1], switchItems[2]), WinHide('ahk_id' vlcId), Tip.ShowTip(switchItems[1])
+  else m.Rename(switchItems[2], switchItems[1]), WinShow('ahk_id' vlcId), Tip.ShowTip(switchItems[2])
 }
 
-M_Toggle2(*) {
-  global vlcId, m
-  static flag := false
-  if flag := !flag {
-    m.Rename(switchItems[1], switchItems[2])
-    PullVCL(), Tip.ShowTip(switchItems[1])
-  } else {
-    if !WinExist('ahk_id' vlcId)
-      return Tip.ShowTip('vlc已被关闭')
-    m.Rename(switchItems[2], switchItems[1]), WinHide('ahk_id' workerWIds.at(-1))
-    DllCall('SetParent', 'ptr', vlcId, 'ptr', WinGetID('ahk_class Progman')), Tip.ShowTip(switchItems[2])
-  }
-}
-
-OnExit((*) => (WinClose('ahk_id' vlcId), WinShow('ahk_id' workerWIds.at(-1))))
+OnExit((*) => (WinClose('ahk_id' vlcId), WinShow('ahk_id' workerWId)))
 
 PullVCL(*) {
   global vlcId, beforeParent
@@ -107,12 +75,8 @@ PullVCL(*) {
 SendMsgToProgman() {
   DllCall('SendMessageTimeout',
     'ptr', WinGetID('ahk_class Progman'),
-    'uint', 0x052c,
-    'uint', 0,
-    'uint', 0,
-    'uint', 0x0000,
-    'uint', 0x3e8,
-    'ptr*', &out := 0
+    'uint', 0x052c, 'uint', 0, 'uint', 0,
+    'uint', 0x0000, 'uint', 0x3e8, 'ptr*', &out := 0
   )
 }
 
