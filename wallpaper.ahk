@@ -7,15 +7,9 @@
 TraySetIcon '.\resource\icon\Meow.png'
 
 ; 2024/04/03
-; --transform-type={90,180,270,hflip,vflip,transpose,antitranspose}  翻转或旋转
-; --video-filter='transform{type="vflip"}'
-; --no-skins2-systray 关闭托盘
-; --no-audio
-
 /**
  * 使用 VLC 作为播放器，通过传递命令行参数控制vlc显示及播放列表
  */
-
 Persistent
 
 options := ['--video-wallpaper', '--no-video-title-show', '--no-loop', '-R'], videoList := []
@@ -39,7 +33,7 @@ DetectHiddenWindows true
 workerWId := WinGetList('ahk_class WorkerW').at(-1)
 WinHide('ahk_id' workerWId)
 
-_log .= '`n-完成', Tip.ShowTip(_log), TransparentTaskBar(2)
+_log .= '`n-完成', Tip.ShowTip(_log)
 
 switchItems := ['隐藏', '显示']
 m := A_TrayMenu
@@ -47,12 +41,8 @@ m := A_TrayMenu
   , m.Add(switchItems[1], Toggle)
   , m.Add('重置', (*) => (DllCall('SetParent', 'ptr', vlcId, 'ptr', WinGetID('ahk_class Progman')), WinHide('ahk_id' workerWId)))
   , m.Add()
-  , m.Add('透明', (*) => TransparentTaskBar(2))
-  , m.Add('模糊', (*) => TransparentTaskBar(3))
-  , m.Add()
   , m.Add('编辑', (*) => Edit())
   , m.Add('退出', (*) => ExitApp())
-m.ClickCount := 1, m.Default := '透明'
 
 Toggle(*) {
   static flag := false
@@ -80,18 +70,18 @@ SendMsgToProgman() {
   )
 }
 
-TransparentTaskBar(accent_state) {
-  ;0：表示禁用玻璃效果和透明度，窗口不会有透明效果。
-  ;1：表示启用玻璃效果，通常以一种轻度透明的方式呈现窗口。
-  ;2：表示启用玻璃效果，通常以更明显的透明方式呈现窗口。
-  ;3：表示启用玻璃效果，通常以更明显的透明方式呈现窗口，并带有模糊效果。
-  WCA_ACCENT_POLICY := 19, pad := A_PtrSize = 8 ? 4 : 0, gradient_color := "0x01000000"
-  ACCENT_POLICY := Buffer(16, 0), WINCOMPATTRDATA := Buffer(4 + pad + A_PtrSize + 4 + pad, 0)
-  hTrayWnd := DllCall("User32\FindWindow", "str", "Shell_TrayWnd", "ptr", 0, "ptr")
-  NumPut("int", (accent_state > 0 && accent_state < 4) ? accent_state : 0, ACCENT_POLICY, 0)
-    , NumPut("int", gradient_color, ACCENT_POLICY, 8)
-    , NumPut("int", WCA_ACCENT_POLICY, WINCOMPATTRDATA, 0)
-    , NumPut("int*", ACCENT_POLICY.ptr, WINCOMPATTRDATA, 4 + pad)
-    , NumPut("uint", ACCENT_POLICY.size, WINCOMPATTRDATA, 4 + pad + A_PtrSize)
-  DllCall("user32\SetWindowCompositionAttribute", "ptr", hTrayWnd, "ptr", WINCOMPATTRDATA)
-}
+; TransparentTaskBar(accent_state) {
+;   ;0：表示禁用玻璃效果和透明度，窗口不会有透明效果。
+;   ;1：表示启用玻璃效果，通常以一种轻度透明的方式呈现窗口。
+;   ;2：表示启用玻璃效果，通常以更明显的透明方式呈现窗口。
+;   ;3：表示启用玻璃效果，通常以更明显的透明方式呈现窗口，并带有模糊效果。
+;   WCA_ACCENT_POLICY := 19, pad := A_PtrSize = 8 ? 4 : 0, gradient_color := "0x01000000"
+;   ACCENT_POLICY := Buffer(16, 0), WINCOMPATTRDATA := Buffer(4 + pad + A_PtrSize + 4 + pad, 0)
+;   hTrayWnd := DllCall("User32\FindWindow", "str", "Shell_TrayWnd", "ptr", 0, "ptr")
+;   NumPut("int", (accent_state > 0 && accent_state < 4) ? accent_state : 0, ACCENT_POLICY, 0)
+;     , NumPut("int", gradient_color, ACCENT_POLICY, 8)
+;     , NumPut("int", WCA_ACCENT_POLICY, WINCOMPATTRDATA, 0)
+;     , NumPut("int*", ACCENT_POLICY.ptr, WINCOMPATTRDATA, 4 + pad)
+;     , NumPut("uint", ACCENT_POLICY.size, WINCOMPATTRDATA, 4 + pad + A_PtrSize)
+;   DllCall("user32\SetWindowCompositionAttribute", "ptr", hTrayWnd, "ptr", WINCOMPATTRDATA)
+; }
