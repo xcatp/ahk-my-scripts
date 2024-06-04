@@ -1,9 +1,18 @@
 ﻿#Include G:\AHK\git-ahk-lib\Tip.ahk
+#Include G:\AHK\git-ahk-lib\Extend.ahk
 
 ^PgUp:: SetWin(0)
 ^PgDn:: SetWin(1)
 ^SC146:: WinTopCtrl.SetTop(WinGetID('A')) ; ^Pause
 ^+SC146:: WinTopCtrl.CancelAll()
+~MButton:: {
+  try WinGetPos(&wx, &wy, &ww, , 'A')
+  catch
+    return
+  MouseGetPos(&mx, &my)
+  if mx.between(wx, wx + ww) and my.between(wy, wy + 50)
+    WinTopCtrl.SetTop(WinGetID('A'))
+}
 
 SetWin(param) {
   try {
