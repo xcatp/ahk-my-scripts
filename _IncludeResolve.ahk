@@ -12,9 +12,9 @@ if !DirExist(outPutDir)
   DirCreate(outPutDir)
 
 for v in GetFileList(A_ScriptDir) {
+  t := Resolve(A_ScriptDir '/' v)
   f := FileOpen(outPutDir '/' v, 'w', 'utf-8')
-  f.Write(Resolve(A_ScriptDir '/' v))
-  f.Close()
+  f.Write(t), f.Close()
 }
 
 MsgBox 'Done!'

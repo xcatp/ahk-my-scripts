@@ -16,7 +16,6 @@ TraySetIcon "./Meow.ico"
 #Include simpleMove.ahk
 #Include volumeCtrl.ahk
 #Include blockMouse.ahk
-#Include colorPicker.ahk
 #Include windowTopCtrl.ahk
 #Include setDesktopIconState.ahk
 
@@ -86,6 +85,6 @@ else {
 
 <!8:: Run('.\ahkProcessMgr.ahk')
 <+<!q:: Run('.\windowTransparentCtrl.ahk')
+!7:: Run('.\colorPicker.ahk')
 
-#Include G:\AHK\_SELF\self.ahk       ; some private data
-#Include G:\AHK\_SELF\leeCode.ahk
+#Include G:\AHK\_SELF\self.ahk       ; some private datak

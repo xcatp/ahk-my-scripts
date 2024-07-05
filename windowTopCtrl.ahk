@@ -5,7 +5,7 @@
 ^PgDn:: SetWin(1)
 ^SC146:: WinTopCtrl.SetTop(WinGetID('A')) ; ^Pause
 ^+SC146:: WinTopCtrl.CancelAll()
-~MButton:: {
+MButton:: {
   try WinGetPos(&wx, &wy, &ww, , 'A')
   catch
     return

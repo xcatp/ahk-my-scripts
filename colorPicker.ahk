@@ -1,70 +1,114 @@
 ﻿#Requires AutoHotkey v2.0
-#SingleInstance Force
 
-#Include G:\AHK\git-ahk-lib\Extend.ahk
-#Include G:\AHK\git-ahk-lib\lib\gdip\gdip4ahk2.ahk
-#Include G:\AHK\git-ahk-lib\Tip.ahk
+#Include g:\AHK\git-ahk-lib\lib\gdip\GdipStarter.ahk
+#Include g:\AHK\git-ahk-lib\Extend.ahk
+#Include g:\AHK\git-ahk-lib\util\Cursor.ahk
 
-CoordMode 'Mouse', 'Screen'
-CoordMode 'ToolTip', 'Screen'
-CoordMode 'Pixel', 'Screen'
+CoordMode 'Mouse'
+CoordMode 'Pixel'
 
-!7:: {
-  MouseGetPos(&x, &y)
-  color := PixelGetColor(x, y, 'Slow').substring(3)
-  Tip.ShowTip(color), A_Clipboard := color
+; config
+hex := false, staticG := true
+offsetX := 12, offsetY := 12, width := 128, height := 128
+font := "consolas", fc := '#ff3aed93'.substring(2)
+
+pBrush := Gdip_BrushCreateSolid(0x8f000000)
+pPenLine := Gdip_CreatePen(0x44a2e9cd, 1)
+pPenbkBlack := Gdip_CreatePen(0xff000000, 1)
+pPenbkWhite := Gdip_CreatePen(0xffffffff, 1)
+
+_()
+
+_() {
+  Cursor.SetIcon(Cursor.Icon.cross)
+  Gdip_FontFamilyCreate(Font)
+
+  pBitmap := Gdip_BitmapFromScreen()
+    , hBitmap := Gdip_CreateHBITMAPFromBitmap(pBitmap)
+    , staticHdc := CreateCompatibleDC()
+    , staticObm := SelectObject(staticHdc, hBitmap)
+
+  gui_ := Gui('-Caption +AlwaysOnTop +ToolWindow +E0x00080000')
+  gui_.Show('NA')
+  global hex, flag
+  Hotkey('LButton Up', Done, 'On')
+  Hotkey('MButton', (*) => (flag := false, hex := !hex), 'On')
+  Hotkey('RButton Up', Exit, 'On')
+  Hotkey('Left', (*) => MouseMove(-1, 0, , 'R'), 'On')
+  Hotkey('Right', (*) => MouseMove(1, 0, , 'R'), 'On')
+  Hotkey('Up', (*) => MouseMove(0, -1, , 'R'), 'On')
+  Hotkey('Down', (*) => MouseMove(0, 1, , 'R'), 'On')
+  Hotkey('Esc', Exit, 'On')
+
+  Done(*) => (A_Clipboard := hex ? g_c : Format('rgb({})', g_c), Exit())
+  Exit(*) => (Clean(), ExitApp())
+
+  SetTimer(Start, 10)
+
+  Start() {
+    static o_mX := 0, o_mY := 0
+    MouseGetPos(&n_mX, &n_mY)
+    if n_mX = o_mX && n_mY = o_mY && flag
+      return
+    flag := true, o_mX := n_mX, o_mY := n_mY
+    hbm := CreateDIBSection(A_ScreenWidth, A_ScreenHeight)
+    hdc := CreateCompatibleDC(), obm := SelectObject(hdc, hbm)
+    G := Gdip_GraphicsFromHDC(hdc), Gdip_SetSmoothingMode(G, 4)
+    if staticG  ; static background
+      BitBlt(hdc, 0, 0, A_ScreenWidth, A_ScreenHeight, staticHdc, 0, 0)
+    _DrawEnlargementfiFrame(n_mX, n_mY)
+    UpdateLayeredWindow(gui_.Hwnd, hdc, 0, 0, A_ScreenWidth, A_ScreenHeight)
+    SelectObject(hdc, obm) DeleteObject(hbm), DeleteDC(hdc), Gdip_DeleteGraphics(G)
+
+    _DrawEnlargementfiFrame(mx, my) {
+      _offsetX := mx + offsetX + width > A_ScreenWidth ? -width : offsetX
+      _offsetY := my + offsetY + height + 20 > A_ScreenHeight ? -height - 20 : offsetY
+      _hbm := CreateDIBSection(A_ScreenWidth, A_ScreenHeight)
+      _obm := SelectObject(_hdc := CreateCompatibleDC(), _hbm), _G := Gdip_GraphicsFromHDC(_hdc)
+      BitBlt(_hdc, 0, 0, A_ScreenWidth, A_ScreenHeight, staticHdc, 0, 0)
+      Gdip_DrawLine(_G, pPenLine, mx, my - 1, mx, my - 10)
+      Gdip_DrawLine(_G, pPenLine, mx, my + 1, mx, my + 10)
+      Gdip_DrawLine(_G, pPenLine, mx - 1, my, mx - 10, my)
+      Gdip_DrawLine(_G, pPenLine, mx + 1, my, mx + 10, my)
+      _x := mx + _offsetX, _y := my + _offsetY, cx := _x + width // 2, cy := _y + height // 2
+      StretchBlt(hdc, _x, _y, width + 2, height + 2, _hdc, mx - 9, my - 9, 19, 19 * (height // width))
+      Gdip_DrawRoundedRectangle(G, pPenbkBlack, _x, _y, width + 2, height + 2, 0)
+      Gdip_DrawRoundedRectangle(G, pPenbkWhite, _x + 1, _y + 1, width, height, 0)
+      Gdip_DrawRoundedRectangle(G, pPenbkBlack, cx - 4, cy - 4, 9, 9, 0)
+      Gdip_DrawRoundedRectangle(G, pPenbkWhite, cx - 3, cy - 3, 7, 7, 0)
+
+      _DrawTip()
+      SelectObject(_hdc, _obm), DeleteObject(_hbm), DeleteDC(_hdc), Gdip_DeleteGraphics(_G)
+
+      _DrawTip() {
+        local x := _x + 1, y := _y + height + 3
+        global g_c
+        Gdip_FillRoundedRectangle(G, pBrush, _x, y - 1, width + 3, 22, 0) ; background
+        _c := '0xff' (hexC := PixelGetColor(Cursor.x, Cursor.y, 'slow').substring(3))
+        Gdip_FillRectangle(G, _b := Gdip_BrushCreateSolid(_c), x, y, 20, 20) ; color box
+        Gdip_DrawRoundedRectangle(G, pPenbkWhite, x, y, 20, 20, 0)
+        options := Format('x{} y{} c{} Center s15', x + 15, y + 2, fc)
+        Gdip_TextToGraphics(G, (g_c := hex ? '#' hexC : _hexToRGB(hexC)), options, font, width - 20, 30)
+        Gdip_DeleteBrush(_b)
+
+        _hexToRGB(_c) {
+          local r, g, b
+          if _c.length = 3
+            _c := _c[0] + _c[0] + _c[1] + _c[1] + _c[2] + _c[2]
+          r := ('0x' _c.substring(1, 3)) & 0xFF
+          g := ('0x' _c.substring(3, 5)) & 0xFF
+          b := ('0x' _c.substring(5)) & 0xFF
+          return JoinStr(',', r, g, b)
+        }
+      }
+    }
+  }
+
+  Clean() {
+    ; HotKeysOff('LButton Up', 'RButton Up', 'Esc')
+    SetTimer(Start, 0)
+    Gdip_DeletePen(pPenLine)
+    Gdip_DeletePen(pPenbkBlack), Gdip_DeleteBrush(pBrush)
+    SelectObject(staticHdc, staticObm), DeleteDC(staticHdc), DeleteObject(hBitmap)
+  }
 }
-
-; if not pToken := Gdip_Startup()
-;   MsgBox 'fail'
-
-; OnExit(exitFunc)
-; exitFunc(*) => Gdip_Shutdown(pToken)
-
-
-; pPen := Gdip_CreatePen(0xff00aeff, 2)
-; pPenszx := Gdip_CreatePen(0x4400aeff, 1)
-; pBrush := Gdip_BrushCreateSolid(0x8f000000)
-; pPenbk := Gdip_CreatePen(0xffffffff, 1)
-
-
-; gui_ := Gui('-Caption +AlwaysOnTop +ToolWindow +E0x00080000')
-; gui_.Show('NA')
-
-
-; hbm := CreateDIBSection(A_ScreenWidth, A_ScreenHeight)
-; hdc := CreateCompatibleDC()
-; obm := SelectObject(hdc, hbm)
-; G := Gdip_GraphicsFromHDC(hdc)
-; Gdip_SetSmoothingMode(G, 4)
-
-
-; MouseGetPos(&n_mX, &n_mY)
-; DrawEnlargementfiFrame(G, pPenbk, pPenszx, hdc, hdc, A_ScreenWidth, A_ScreenHeight, n_mX, n_mY)
-
-
-; UpdateLayeredWindow(gui_.Hwnd, hdc, 0, 0, A_ScreenWidth, A_ScreenHeight)
-
-; KeyWait('d')
-
-; SelectObject(hdc, obm)
-; DeleteObject(hbm)
-; DeleteDC(hdc)
-; Gdip_DeleteGraphics(G)
-
-; DrawEnlargementfiFrame(graphic, pPenbk, pPenszx, staticHdc, chdc, Screen_w, Screen_h, mx, my) {
-;   _hbm := CreateDIBSection(Screen_w, Screen_h)
-;   _hdc := CreateCompatibleDC()
-;   _obm := SelectObject(_hdc, _hbm)
-;   G := Gdip_GraphicsFromHDC(_hdc) 	; 光标放大框
-;   BitBlt(_hdc, 0, 0, Screen_w, Screen_h, staticHdc, 0, 0) ; 绘制放大框
-;   Gdip_DrawLine(G, pPenszx, mx, my - 12, mx, my + 12) ; 十字线
-;   Gdip_DrawLine(G, pPenszx, mx - 12, my, mx + 12, my)
-;   StretchBlt(chdc, mx + 15, my + 25, 126, 126, _hdc, mx - 10, my - 10, 21, 21) ; 放大框
-;   Gdip_DrawRoundedRectangle(graphic, pPenbk, mx + 14, my + 24, 127, 127, 0) ; 放大框轮廓
-
-;   SelectObject(_hdc, _obm)
-;   DeleteObject(_hbm)
-;   DeleteDC(_hdc)
-;   Gdip_DeleteGraphics(G)
-; }
