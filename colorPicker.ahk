@@ -8,9 +8,9 @@ CoordMode 'Mouse'
 CoordMode 'Pixel'
 
 ; config
-hex := false, staticG := true
+hex := true, staticG := true
 offsetX := 12, offsetY := 12, width := 128, height := 128
-font := "consolas", fc := '#ff3aed93'.substring(2)
+font := "consolas", fc := '#ffdbffd5'.substring(2)
 
 pBrush := Gdip_BrushCreateSolid(0x8f000000)
 pPenLine := Gdip_CreatePen(0x44a2e9cd, 1)
@@ -83,7 +83,7 @@ _() {
       _DrawTip() {
         local x := _x + 1, y := _y + height + 3
         global g_c
-        Gdip_FillRoundedRectangle(G, pBrush, _x, y - 1, width + 3, 22, 0) ; background
+        Gdip_FillRoundedRectangle(G, pBrush, _x, y - 1, width + 2, 22, 0) ; background
         _c := '0xff' (hexC := PixelGetColor(Cursor.x, Cursor.y, 'slow').substring(3))
         Gdip_FillRectangle(G, _b := Gdip_BrushCreateSolid(_c), x, y, 20, 20) ; color box
         Gdip_DrawRoundedRectangle(G, pPenbkWhite, x, y, 20, 20, 0)
