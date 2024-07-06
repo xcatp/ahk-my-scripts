@@ -4,7 +4,7 @@
 #Include G:\AHK\git-ahk-lib\Extend.ahk
 #Include G:\AHK\git-ahk-lib\Tip.ahk
 
-TraySetIcon '.\resource\icon\Meow.png'
+TraySetIcon '..\resource\icon\Meow.png'
 
 ; 2024/04/03
 /**

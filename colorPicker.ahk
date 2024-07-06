@@ -1,7 +1,10 @@
 ﻿#Requires AutoHotkey v2.0
 
+#SingleInstance Ignore
+
 #Include g:\AHK\git-ahk-lib\lib\gdip\GdipStarter.ahk
 #Include g:\AHK\git-ahk-lib\Extend.ahk
+#Include g:\AHK\git-ahk-lib\Tip.ahk
 #Include g:\AHK\git-ahk-lib\util\Cursor.ahk
 
 CoordMode 'Mouse'
@@ -9,11 +12,13 @@ CoordMode 'Pixel'
 
 ; config
 hex := true, staticG := true
-offsetX := 12, offsetY := 12, width := 128, height := 128
+offsetX := 12, offsetY := 12, width := 160, height := 128, _h := 16
 font := "consolas", fc := '#ffdbffd5'.substring(2)
 
+; _fc := '#6003ffff'
+
 pBrush := Gdip_BrushCreateSolid(0x8f000000)
-pPenLine := Gdip_CreatePen(0x44a2e9cd, 1)
+pPenLine := Gdip_CreatePen(0x6003ffff, 1)
 pPenbkBlack := Gdip_CreatePen(0xff000000, 1)
 pPenbkWhite := Gdip_CreatePen(0xffffffff, 1)
 
@@ -40,7 +45,7 @@ _() {
   Hotkey('Down', (*) => MouseMove(0, 1, , 'R'), 'On')
   Hotkey('Esc', Exit, 'On')
 
-  Done(*) => (A_Clipboard := hex ? g_c : Format('rgb({})', g_c), Exit())
+  Done(*) => (A_Clipboard := hex ? g_c : Format('rgb{}', g_c), Exit())
   Exit(*) => (Clean(), ExitApp())
 
   SetTimer(Start, 10)
@@ -66,16 +71,19 @@ _() {
       _hbm := CreateDIBSection(A_ScreenWidth, A_ScreenHeight)
       _obm := SelectObject(_hdc := CreateCompatibleDC(), _hbm), _G := Gdip_GraphicsFromHDC(_hdc)
       BitBlt(_hdc, 0, 0, A_ScreenWidth, A_ScreenHeight, staticHdc, 0, 0)
-      Gdip_DrawLine(_G, pPenLine, mx, my - 1, mx, my - 10)
-      Gdip_DrawLine(_G, pPenLine, mx, my + 1, mx, my + 10)
-      Gdip_DrawLine(_G, pPenLine, mx - 1, my, mx - 10, my)
-      Gdip_DrawLine(_G, pPenLine, mx + 1, my, mx + 10, my)
-      _x := mx + _offsetX, _y := my + _offsetY, cx := _x + width // 2, cy := _y + height // 2
-      StretchBlt(hdc, _x, _y, width + 2, height + 2, _hdc, mx - 9, my - 9, 19, 19 * (height // width))
-      Gdip_DrawRoundedRectangle(G, pPenbkBlack, _x, _y, width + 2, height + 2, 0)
+      _w := width * _h // height, _pw := width // _w, _ph := height // _h
+      Gdip_DrawLine(_G, pPenLine, mx, my - 1, mx, my - _h // 2) ; vertical
+      Gdip_DrawLine(_G, pPenLine, mx, my + 1, mx, my + _h // 2)
+      Gdip_DrawLine(_G, pPenLine, mx - 1, my, mx - _w // 2, my)
+      Gdip_DrawLine(_G, pPenLine, mx + 1, my, mx + _w // 2, my)
+      _x := mx + _offsetX, _y := my + _offsetY, cx := _x + (width + 4) // 2, cy := _y + (height + 4) // 2
+      StretchBlt(hdc, _x + 2, _y + 2, width, height, _hdc, mx - _w // 2, my - _h // 2, _w + 1, _h)
+      Gdip_DrawRoundedRectangle(G, pPenbkBlack, _x, _y, width + 2, height + 2, 0) ; border
       Gdip_DrawRoundedRectangle(G, pPenbkWhite, _x + 1, _y + 1, width, height, 0)
-      Gdip_DrawRoundedRectangle(G, pPenbkBlack, cx - 4, cy - 4, 9, 9, 0)
-      Gdip_DrawRoundedRectangle(G, pPenbkWhite, cx - 3, cy - 3, 7, 7, 0)
+      Gdip_DrawRoundedRectangle(G, pPenbkBlack, cx - _pw // 2 - 2, cy - 2, _pw + 3, _ph + 3, 0)
+      Gdip_DrawRoundedRectangle(G, pPenbkWhite, cx - _pw // 2 - 1, cy - 1, _pw + 1, _ph + 1, 0)
+
+      ; ListVars
 
       _DrawTip()
       SelectObject(_hdc, _obm), DeleteObject(_hbm), DeleteDC(_hdc), Gdip_DeleteGraphics(_G)
@@ -98,7 +106,7 @@ _() {
           r := ('0x' _c.substring(1, 3)) & 0xFF
           g := ('0x' _c.substring(3, 5)) & 0xFF
           b := ('0x' _c.substring(5)) & 0xFF
-          return JoinStr(',', r, g, b)
+          return JoinStr(',', '(' r, g, b ')')
         }
       }
     }
