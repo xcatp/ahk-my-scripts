@@ -11,7 +11,7 @@ CoordMode 'Mouse'
 CoordMode 'Pixel'
 
 ; config
-hex := true, staticG := true
+hex := true, staticG := false
 offsetX := 12, offsetY := 12, width := 160, height := 128, _h := 16
 font := "consolas", fc := '#ffdbffd5'.substring(2)
 
@@ -35,9 +35,11 @@ _() {
 
   gui_ := Gui('-Caption +AlwaysOnTop +ToolWindow +E0x00080000')
   gui_.Show('NA')
-  global hex, flag
+  global hex, flag, _h
   Hotkey('LButton Up', Done, 'On')
   Hotkey('MButton', (*) => (flag := false, hex := !hex), 'On')
+  Hotkey('WheelUp', (*) => (_h -= _h <= 8 ? 0 : 2, flag := false), 'On')
+  Hotkey('WheelDown', (*) => (_h += 2, flag := false), 'On')
   Hotkey('RButton Up', Exit, 'On')
   Hotkey('Left', (*) => MouseMove(-1, 0, , 'R'), 'On')
   Hotkey('Right', (*) => MouseMove(1, 0, , 'R'), 'On')
@@ -77,7 +79,7 @@ _() {
       Gdip_DrawLine(_G, pPenLine, mx - 1, my, mx - _w // 2, my)
       Gdip_DrawLine(_G, pPenLine, mx + 1, my, mx + _w // 2, my)
       _x := mx + _offsetX, _y := my + _offsetY, cx := _x + (width + 4) // 2, cy := _y + (height + 4) // 2
-      StretchBlt(hdc, _x + 2, _y + 2, width, height, _hdc, mx - _w // 2, my - _h // 2, _w + 1, _h)
+      StretchBlt(hdc, _x + 2, _y + 2, width, height, _hdc, mx - _w // 2, my - _h // 2, (_w & 1 ? _w : _w + 1), _h)
       Gdip_DrawRoundedRectangle(G, pPenbkBlack, _x, _y, width + 2, height + 2, 0) ; border
       Gdip_DrawRoundedRectangle(G, pPenbkWhite, _x + 1, _y + 1, width, height, 0)
       Gdip_DrawRoundedRectangle(G, pPenbkBlack, cx - _pw // 2 - 2, cy - 2, _pw + 3, _ph + 3, 0)
