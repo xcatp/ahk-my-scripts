@@ -1,6 +1,7 @@
 ﻿#Requires AutoHotkey v2.0
 
 #SingleInstance Ignore
+#NoTrayIcon
 
 #Include g:\AHK\git-ahk-lib\lib\gdip\GdipStarter.ahk
 #Include g:\AHK\git-ahk-lib\Extend.ahk
@@ -11,7 +12,7 @@ CoordMode 'Mouse'
 CoordMode 'Pixel'
 
 ; config
-hex := true, staticG := false
+hex := true, staticG := true
 offsetX := 12, offsetY := 12, width := 160, height := 128, _h := 16
 font := "consolas", fc := '#ffdbffd5'.substring(2)
 
@@ -35,11 +36,11 @@ _() {
 
   gui_ := Gui('-Caption +AlwaysOnTop +ToolWindow +E0x00080000')
   gui_.Show('NA')
-  global hex, flag, _h
+  global hex, flag, _h, g_c
   Hotkey('LButton Up', Done, 'On')
   Hotkey('MButton', (*) => (flag := false, hex := !hex), 'On')
   Hotkey('WheelUp', (*) => (_h -= _h <= 8 ? 0 : 2, flag := false), 'On')
-  Hotkey('WheelDown', (*) => (_h += 2, flag := false), 'On')
+  Hotkey('WheelDown', (*) => (_h += _h >= height ? 0 : 2, flag := false), 'On')
   Hotkey('RButton Up', Exit, 'On')
   Hotkey('Left', (*) => MouseMove(-1, 0, , 'R'), 'On')
   Hotkey('Right', (*) => MouseMove(1, 0, , 'R'), 'On')
@@ -60,6 +61,7 @@ _() {
     flag := true, o_mX := n_mX, o_mY := n_mY
     hbm := CreateDIBSection(A_ScreenWidth, A_ScreenHeight)
     hdc := CreateCompatibleDC(), obm := SelectObject(hdc, hbm)
+    ; SetStretchBltMode(hdc, 4)
     G := Gdip_GraphicsFromHDC(hdc), Gdip_SetSmoothingMode(G, 4)
     if staticG  ; static background
       BitBlt(hdc, 0, 0, A_ScreenWidth, A_ScreenHeight, staticHdc, 0, 0)
@@ -68,8 +70,8 @@ _() {
     SelectObject(hdc, obm) DeleteObject(hbm), DeleteDC(hdc), Gdip_DeleteGraphics(G)
 
     _DrawEnlargementfiFrame(mx, my) {
-      _offsetX := mx + offsetX + width > A_ScreenWidth ? -width : offsetX
-      _offsetY := my + offsetY + height + 20 > A_ScreenHeight ? -height - 20 : offsetY
+      _offsetX := mx + offsetX + width + 5 > A_ScreenWidth ? -width - 5 : offsetX
+      _offsetY := my + offsetY + height + 25 > A_ScreenHeight ? -height - 25 : offsetY
       _hbm := CreateDIBSection(A_ScreenWidth, A_ScreenHeight)
       _obm := SelectObject(_hdc := CreateCompatibleDC(), _hbm), _G := Gdip_GraphicsFromHDC(_hdc)
       BitBlt(_hdc, 0, 0, A_ScreenWidth, A_ScreenHeight, staticHdc, 0, 0)

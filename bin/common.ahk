@@ -1,4 +1,4 @@
-/* 
+/*
 此文件用于打包成exe，方便在非本机环境下使用；
 （相比主脚本包含的功能少很多）
 */
@@ -11,8 +11,8 @@
 
 #Hotstring EndChars `t `n.';/
 
-#Include simpleMove.ahk
-#Include windowTopCtrl.ahk
+#Include ../simpleMove.ahk
+#Include ../windowTopCtrl.ahk
 
 CoordMode "ToolTip", "Screen"
 CoordMode "Pixel", "Screen"

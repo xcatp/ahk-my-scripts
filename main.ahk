@@ -6,6 +6,7 @@
 #Include G:\AHK\git-ahk-lib\extend\HotStringEx.ahk
 #Include G:\AHK\git-ahk-lib\util\log\log.ahk
 #Include G:\AHK\git-ahk-lib\util\AhkCmdLine.ahk
+#Include G:\AHK\git-ahk-lib\util\Fs.ahk
 
 #Hotstring EndChars `t `n.';/
 TraySetIcon "./Meow.ico"
@@ -25,16 +26,25 @@ CoordMode "Mouse", "Screen"
 
 tray := A_TrayMenu
 tray.delete()
-  , tray.add('Edit', (*) => Edit())
   , tray.add('Folder', (*) => Run(A_ScriptDir))
   , tray.add('Log', (*) => Run('.\_log.txt'))
+
+sm := Menu()
+tray.add('use', sm)
   , tray.add()
   , tray.add('Reload', (*) => Reload())
   , tray.add('Exit', (*) => ExitApp())
   , tray.Default := 'Log'
 
+Filter(v) {
+  SplitPath(v, , , &ext)
+  _p := StrSplit(v)[1]
+  return _p != '.' && _p != '_' && ext = 'ahk'
+}
+fList := FS.ReadDir('./scripts', Filter)
+fList.foreach(v => sm.Add(v, (v, *) => (Sleep(300), Run('.\scripts\' v))))
 
-$LAlt:: {
+$LAlt:: {  ; 
   if A_PriorHotkey = A_ThisHotkey && A_TimeSincePriorHotkey < 5
     return
   Send('{LAlt Down}'), KeyWait('LAlt'), Send('{LAlt Up}')
@@ -83,8 +93,7 @@ else {
   OnExit((*) => logger.Info('Script Exit'))
 }
 
-<!8:: Run('.\ahkProcessMgr.ahk')
-<+<!q:: Run('.\windowTransparentCtrl.ahk')
-!7:: Run('.\colorPicker.ahk')
+<+<!q:: Run('.\scripts\_windowTransparentCtrl.ahk')
+!7:: Run('.\scripts\colorPicker.ahk')
 
-#Include G:\AHK\_SELF\self.ahk       ; some private datak
+#Include G:\AHK\_SELF\meow.ahk       ; some private data
