@@ -1,8 +1,9 @@
 ﻿#Include G:\AHK\git-ahk-lib\Tip.ahk
 
-<+<!PrintScreen:: Send("{Media_Play_Pause}"), MediaSwitchTip('切换')
-<+<!Ins:: Send("{Media_Prev}"), MediaSwitchTip('往前')
-<+<!Del::  Send("{Media_Next}"), MediaSwitchTip('向后')
+^F10::Send('{Media_Play_Pause}')
+^F11::Send('{Media_Prev}')
+^F12::Send('{Media_Next}')
+
 
 MediaSwitchTip(msg) {
   raw := '+===+`n'
