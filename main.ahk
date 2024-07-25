@@ -94,6 +94,6 @@ else {
 }
 
 <+<!q:: Run('.\scripts\_windowTransparentCtrl.ahk')
-!7:: Run('.\scripts\colorPicker.ahk')
+!7:: Run('.\scripts\colorThief.ahk')
 
 #Include G:\AHK\_SELF\meow.ahk       ; some private data
