@@ -1,5 +1,5 @@
 ﻿#Requires AutoHotkey v2.0
-#SingleInstance Force
+#SingleInstance Ignore
 
 #Include G:\AHK\git-ahk-lib\Tip.ahk
 #Include G:\AHK\git-ahk-lib\Theme.ahk
@@ -17,6 +17,7 @@ imgList := IL_Create(10)
 
 ExplorerContextActions := [
   ['Icon' 0, '复制路径', _copyPath],
+  ['Icon' 0, '复制文本', _copyText],
   ['Icon' 1, '以vscode打开', _openWithVsCode],
   ['Icon' 2, '以记事本打开', _openWithNotepad],
 ]
@@ -49,6 +50,13 @@ _openWithNotepad() {
 _copyPath() {
   if selected.Length
     A_Clipboard := '', A_Clipboard := selected[1], Tip.ShowTip('Copied!')
+}
+_copyText() {
+  if selected.Length {
+    _p := selected[1]
+    _t := FileRead(_p, 'utf-8')
+    A_Clipboard := '', A_Clipboard := _t, Tip.ShowTip('Copied!')
+  }
 }
 
 
