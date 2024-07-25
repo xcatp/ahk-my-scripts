@@ -7,10 +7,11 @@ outPutDir := ''  ; 留空将原地修改
 g := Gui('+AlwaysOnTop')
 g.SetFont('s14', 'consolas')
 g.OnEvent('DropFiles', OnDrpoFiles)
-_e1 := g.AddEdit('w800 r1', targetDir)
-_e2 := g.AddEdit('w800 r1', outPutDir)
-g.AddButton('w80', 'ok').OnEvent('Click', ChangeSetting)
-_e := g.AddEdit('w800 h500 vEdit ReadOnly')
+g.AddText('Section', 'target dir:')
+_e1 := g.AddEdit('yp w800 r1', targetDir)
+g.AddText('xs', 'output dir:')
+_e2 := g.AddEdit('yp w800 r1', outPutDir)
+_e := g.AddEdit('xs w920 h500 vEdit ReadOnly')
 g.Show()
 _e.Value := 'drop dir or files to here.`n'
 
@@ -23,14 +24,10 @@ ChangeSetting(*) {
   if _e2.Value && !DirExist(_e2.Value)
     DirCreate(_e2.Value)
   targetDir := _e1.Value, outPutDir := _e2.Value
-  _e.Value :=
-    Format('target dir is:[{}]`noutput dir is:[{}]`n---`ndrop dir or files to here.`n---`n'
-      , _e1.Value
-      , _e2.Value ? _e2.Value : 'null'
-    )
 }
 
 OnDrpoFiles(g, gc, fileArray, *) {
+  ChangeSetting()
   for v in fileArray {
     if InStr(FileGetAttrib(v), 'D') {
       loop files v '/*.*', 'DFR' {
@@ -45,15 +42,14 @@ OnDrpoFiles(g, gc, fileArray, *) {
       _write(v, fileName)
     }
   }
+  g['Edit'].Value .= 'Done!`n'
 
   _write(fullPath, fileName) {
     t := Resolve(fullPath)
-    f := FileOpen(outPutDir ? outPutDir '/' fileName : fullPath, 'w', 'utf-8')
+    f := FileOpen(_p := (outPutDir ? outPutDir '/' fileName : fullPath), 'w', 'utf-8')
     f.Write(t), f.Close()
-    g['Edit'].Value .= '> ' fullPath '`n'
+    g['Edit'].Value .= '> ' fullPath ' TO ' _p '`n'
   }
-
-  MsgBox 'Done!'
 }
 
 
