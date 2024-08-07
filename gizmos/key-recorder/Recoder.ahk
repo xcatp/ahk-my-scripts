@@ -38,7 +38,7 @@ saved := false
 Save() {
   if !action.Length
     return D('`n---Empty data`n')
-  s := JSON.Stringify(action)
+  s := JSON.Stringify(action, 0)
   f := FileOpen('./data.txt', 'w', 'utf-8')
   f.Write s
   f.Close
