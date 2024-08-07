@@ -13,13 +13,15 @@ CoordMode 'Mouse', 'Screen'
 
 imgList := IL_Create(10)
   , IL_Add(imgList, './resource/icon/vscode.ico')
+  , IL_Add(imgList, './resource/icon/markdown.ico')
   , IL_Add(imgList, './resource/icon/text.png')
 
 ExplorerContextActions := [
   ['Icon' 0, '复制路径', _copyPath],
   ['Icon' 0, '复制文本', _copyText],
   ['Icon' 1, '以vscode打开', _openWithVsCode],
-  ['Icon' 2, '以记事本打开', _openWithNotepad],
+  ['Icon' 2, '以typora打开', _openWithTypora],
+  ['Icon' 3, '以记事本打开', _openWithNotepad],
 ]
 
 selected := []
@@ -43,6 +45,12 @@ _openWithVsCode() {
   if selected.Length
     Run(A_ComSpec ' /c code ' selected[1])
 }
+
+_openWithTypora() {
+  if selected.Length
+    Run(A_ComSpec Format(' /c F:\Typore\Typora\Typora.exe "{}"', selected[1]), , 'Hide')
+}
+
 _openWithNotepad() {
   if selected.Length
     Run('notepad ' selected.join(A_Space))
